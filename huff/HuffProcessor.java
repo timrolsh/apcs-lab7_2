@@ -80,8 +80,16 @@ public class HuffProcessor implements Processor {
      * PSEUDO_EOF and include it in the priority queue (and tree) as well.
      */
     private HuffNode makeTreeFromCounts(int[] array) {
-        // TODO: Step 2
-        return new HuffNode(-1,-1);
+        // put all the final nodes in a prio queue
+        PriorityQueue<HuffNode> priorityQueue = new PriorityQueue<>();
+        for (int a = 0; a < array.length; ++a) {
+            // if this byte appears more than once, add it to the queue
+            if (array[a] > 0) {
+                priorityQueue.add(new HuffNode(a, array[a]));
+            }
+        }
+        HuffNode pointer = priorityQueue.remove()
+        // TODO finish step 2 i didnt finish this yet
     }
 
     /** Debugging method.
