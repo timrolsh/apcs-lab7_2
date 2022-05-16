@@ -56,10 +56,13 @@ public class HuffProcessor implements Processor {
     private int[] readForCounts(BitInputStream in) {
         // array index is the byte, array value at index is count of byte
         int[] arr = new int[256];
+        int count = 1;
         int ind = in.readBits(8);
         // while we havent hit the EOF indicator (-1), read bytes in and fill array with
         // their counts =
         while (ind != -1) {
+            System.out.println("Count:" + count++);
+            System.out.println(ind);
             ++arr[ind];
             ind = in.readBits(8);
         }
@@ -95,7 +98,7 @@ public class HuffProcessor implements Processor {
         }
 
         // add EOF character to queue, it only occurs once and its value is -1
-        priorityQueue.add(new HuffNode(-1, 1));
+        priorityQueue.add(new HuffNode(0b100000000, 1));
 
         while (priorityQueue.size() > 1) {
             HuffNode one = priorityQueue.remove();
@@ -205,11 +208,11 @@ public class HuffProcessor implements Processor {
      * character to the file.
      */
     private void writeCompressedBits(BitInputStream in, String[] codings, BitOutputStream out) {
-        int bits = 0;
+        int bits = in.readBits(8);
         // while write compressed bits while you haven't hit EOF
-        while (bits != 256) {
-            bits = in.readBits(8);
+        while (bits != -1) {
             out.writeBits(codings[bits].length(), Integer.parseInt(codings[bits], 2));
+            bits = in.readBits(8);
         }
     }
 
