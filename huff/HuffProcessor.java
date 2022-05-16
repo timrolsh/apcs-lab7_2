@@ -56,13 +56,10 @@ public class HuffProcessor implements Processor {
     private int[] readForCounts(BitInputStream in) {
         // array index is the byte, array value at index is count of byte
         int[] arr = new int[256];
-        int count = 1;
         int ind = in.readBits(8);
         // while we havent hit the EOF indicator (-1), read bytes in and fill array with
         // their counts =
         while (ind != -1) {
-            System.out.println("Count:" + count++);
-            System.out.println(ind);
             ++arr[ind];
             ind = in.readBits(8);
         }
@@ -97,8 +94,8 @@ public class HuffProcessor implements Processor {
             }
         }
 
-        // add EOF character to queue, it only occurs once and its value is -1
-        priorityQueue.add(new HuffNode(0b100000000, 1));
+        // add EOF character to queue, it only occurs once and its value is 256
+        priorityQueue.add(new HuffNode(256, 1));
 
         while (priorityQueue.size() > 1) {
             HuffNode one = priorityQueue.remove();
@@ -186,8 +183,8 @@ public class HuffProcessor implements Processor {
     private void writeHeader(HuffNode n, BitOutputStream out) {
         if (n.isLeaf()) {
             // if you get to leaf, write a 1, then write the value of the that leaf
-            out.writeBits(1, 0b1);
-            out.writeBits(8, n.value());
+            out.writeBits(1, 1);
+            out.writeBits(9, n.value());
         } else {
             out.writeBits(1, 0);
             writeHeader(n.left(), out);
@@ -214,6 +211,7 @@ public class HuffProcessor implements Processor {
             out.writeBits(codings[bits].length(), Integer.parseInt(codings[bits], 2));
             bits = in.readBits(8);
         }
+        out.writeBits(codings[256].length(), Integer.parseInt(codings[256], 2));
     }
 
     @Override
@@ -250,7 +248,6 @@ public class HuffProcessor implements Processor {
         return new HuffNode(0, 0, readHeader(in), readHeader(in));
     }
 
-
     /**
      * Reads the body of the compressed file. Start at the root of the tree.
      * Read 1 bit of input.
@@ -263,18 +260,17 @@ public class HuffProcessor implements Processor {
         while (true) {
             HuffNode node = root;
             while (!node.isLeaf()) {
-                if (in.readBits(1) == 0b1) {
+                if (in.readBits(1) == 1) {
                     node = node.right();
                 } else {
                     node = node.left();
                 }
             }
-            //TODO does this need to be 8 bits of 9?
-            out.writeBits(9, node.value());
             // if we have hit the EOF, break
-            if (node.value() == 0b100000000) {
+            if (node.value() == 256) {
                 break;
             }
+            out.writeBits(8, node.value());
         }
     }
 
